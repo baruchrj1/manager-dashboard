@@ -164,7 +164,7 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
                             <Input
                                 label="Nome do Projeto"
                                 value={formData.name}
-                                onChange={v => handleChange("name", v)}
+                                onChange={(v: string) => handleChange("name", v)}
                                 placeholder="Ex: Servidor Roleplay"
                                 required
                                 className="w-full"
@@ -190,7 +190,7 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
                             <Input
                                 label="Domínio Personalizado"
                                 value={formData.customDomain || ""}
-                                onChange={v => handleChange("customDomain", v)}
+                                onChange={(v: string) => handleChange("customDomain", v)}
                                 placeholder="painel.seuservidor.com"
                                 className="w-full"
                                 optional
@@ -216,18 +216,18 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
                                 <p>O cliente deve criar uma aplicação no Discord Developer Portal e convidar o bot para o servidor antes de configurar.</p>
                             </div>
 
-                            <Input label="Guild ID (Servidor)" value={formData.discordGuildId} onChange={v => handleChange("discordGuildId", v)} required mono />
-                            <Input label="Role Admin ID" value={formData.discordRoleAdmin} onChange={v => handleChange("discordRoleAdmin", v)} required mono />
+                            <Input label="Guild ID (Servidor)" value={formData.discordGuildId} onChange={(v: string) => handleChange("discordGuildId", v)} required mono />
+                            <Input label="Role Admin ID" value={formData.discordRoleAdmin} onChange={(v: string) => handleChange("discordRoleAdmin", v)} required mono />
 
-                            <Input label="Client ID (App)" value={formData.discordClientId} onChange={v => handleChange("discordClientId", v)} required mono />
-                            <Input label="Client Secret" value={formData.discordClientSecret} onChange={v => handleChange("discordClientSecret", v)} required type="password" mono />
+                            <Input label="Client ID (App)" value={formData.discordClientId} onChange={(v: string) => handleChange("discordClientId", v)} required mono />
+                            <Input label="Client Secret" value={formData.discordClientSecret} onChange={(v: string) => handleChange("discordClientSecret", v)} required type="password" mono />
                         </div>
 
                         <div className="border-t border-white/5 pt-6">
                             <h4 className="text-sm font-medium text-white mb-4">Cargos Adicionais</h4>
                             <div className="grid md:grid-cols-2 gap-6">
-                                <Input label="Role Avaliador" value={formData.discordRoleEvaluator || ""} onChange={v => handleChange("discordRoleEvaluator", v)} mono optional />
-                                <Input label="Role Player" value={formData.discordRolePlayer || ""} onChange={v => handleChange("discordRolePlayer", v)} mono optional />
+                                <Input label="Role Avaliador" value={formData.discordRoleEvaluator || ""} onChange={(v: string) => handleChange("discordRoleEvaluator", v)} mono optional />
+                                <Input label="Role Player" value={formData.discordRolePlayer || ""} onChange={(v: string) => handleChange("discordRolePlayer", v)} mono optional />
                             </div>
                         </div>
                     </div>
@@ -297,14 +297,14 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
                         <div>
                             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3 block">Paleta de Cores</label>
                             <div className="grid grid-cols-2 gap-3">
-                                <ColorPicker label="Primária" value={formData.primaryColor} onChange={v => handleChange("primaryColor", v)} />
-                                <ColorPicker label="Secundária" value={formData.secondaryColor} onChange={v => handleChange("secondaryColor", v)} />
+                                <ColorPicker label="Primária" value={formData.primaryColor} onChange={(v: string) => handleChange("primaryColor", v)} />
+                                <ColorPicker label="Secundária" value={formData.secondaryColor} onChange={(v: string) => handleChange("secondaryColor", v)} />
                             </div>
                         </div>
 
                         <div className="space-y-4 pt-2">
-                            <Input label="URL do Logo" value={formData.logo || ""} onChange={v => handleChange("logo", v)} placeholder="https://..." optional />
-                            <Input label="URL do Favicon" value={formData.favicon || ""} onChange={v => handleChange("favicon", v)} placeholder="https://..." optional />
+                            <Input label="URL do Logo" value={formData.logo || ""} onChange={(v: string) => handleChange("logo", v)} placeholder="https://..." optional />
+                            <Input label="URL do Favicon" value={formData.favicon || ""} onChange={(v: string) => handleChange("favicon", v)} placeholder="https://..." optional />
                         </div>
                     </div>
 
@@ -316,9 +316,21 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
 
 // --- Subcomponents ---
 
-function Input({ label, value, onChange, placeholder, type = "text", required, mono, className, optional }: any) {
+interface InputProps {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+    type?: string;
+    required?: boolean;
+    mono?: boolean;
+    className?: string;
+    optional?: boolean;
+}
+
+function Input({ label, value, onChange, placeholder, type = "text", required, mono, className, optional }: InputProps) {
     return (
-        <div className={`space-y-2 ${className}`}>
+        <div className={`space-y-2 ${className || ''}`}>
             <div className="flex justify-between">
                 <label className="text-sm font-medium text-zinc-300">
                     {label} {required && <span className="text-violet-400">*</span>}
