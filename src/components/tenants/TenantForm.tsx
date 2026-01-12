@@ -20,9 +20,9 @@ type TenantFormData = {
     // Branding
     primaryColor: string;
     secondaryColor: string;
-    logo?: string;
-    favicon?: string;
-    customDomain?: string;
+    logo?: string | null;
+    favicon?: string | null;
+    customDomain?: string | null;
     // Features
     features: TenantFeatures;
     // Discord
@@ -30,8 +30,8 @@ type TenantFormData = {
     discordClientId: string;
     discordClientSecret: string;
     discordRoleAdmin: string;
-    discordRoleEvaluator?: string;
-    discordRolePlayer?: string;
+    discordRoleEvaluator?: string | null;
+    discordRolePlayer?: string | null;
     isActive: boolean;
 };
 
