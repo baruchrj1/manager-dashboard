@@ -3,16 +3,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, ArrowLeft, Globe, Palette, Shield, Disc } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Globe, Palette, Shield, Disc, Check, Info } from "lucide-react";
 import Link from "next/link";
 
-// Types matching our backend
-type TenantFeatures = {
-    archive: boolean;
-    punishments: boolean;
-    discordNotify: boolean;
-};
+import { TenantFeatures } from "@/lib/tenants/schema";
 
+// UI Helper Type (extends the base Input type with ID which is generated on server)
 type TenantFormData = {
     id?: string;
     name: string;
@@ -43,8 +39,8 @@ interface TenantFormProps {
 const DEFAULT_DATA: TenantFormData = {
     name: "",
     slug: "",
-    primaryColor: "#6366f1",
-    secondaryColor: "#4f46e5",
+    primaryColor: "#7c3aed", // Modern Violet
+    secondaryColor: "#4f46e5", // Indigo
     features: {
         archive: true,
         punishments: true,
@@ -107,154 +103,209 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header / Actions */}
-            <div className="flex items-center justify-between">
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-6xl mx-auto animate-in fade-in duration-500">
+
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <Link href="/tenants" className="p-2 hover:bg-white/5 rounded-lg transition-colors text-zinc-400 hover:text-white">
+                    <Link href="/tenants" className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-zinc-400 hover:text-white">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white font-display">
+                        <h1 className="text-2xl font-bold text-white tracking-tight">
                             {isEditing ? `Editar: ${formData.name}` : "Novo Cliente SaaS"}
                         </h1>
-                        <p className="text-sm text-zinc-400">Configure os detalhes do painel do cliente.</p>
+                        <p className="text-sm text-zinc-500">Configure os detalhes e integrações do painel.</p>
                     </div>
                 </div>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-all font-medium shadow-lg shadow-violet-900/20"
-                >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    {isEditing ? "Salvar Alterações" : "Criar Painel"}
-                </button>
+                <div className="flex gap-3">
+                    <Link
+                        href="/tenants"
+                        className="px-6 py-2.5 rounded-lg border border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm transition-colors"
+                    >
+                        Cancelar
+                    </Link>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-lg disabled:opacity-50 transition-all font-medium text-sm shadow-lg shadow-violet-500/20"
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {isEditing ? "Salvar Alterações" : "Criar Painel"}
+                    </button>
+                </div>
             </div>
 
             {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-xl flex items-center gap-2 text-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-xl flex items-center gap-3 text-sm">
+                    <Shield className="w-5 h-5 text-red-500 shrink-0" />
                     {error}
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column (Main Info) */}
-                <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                {/* Left Column (Main Config) */}
+                <div className="lg:col-span-8 space-y-8">
 
                     {/* Basic Info */}
-                    <Section title="Informações Básicas" icon={<Globe className='w-4 h-4 text-violet-400' />}>
-                        <div className="grid md:grid-cols-2 gap-6">
+                    <div className="glass-card rounded-xl p-8 space-y-8">
+                        <div className="flex items-center gap-3 pb-6 border-b border-white/5">
+                            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <Globe className="w-5 h-5 text-violet-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-white">Informações Básicas</h3>
+                                <p className="text-sm text-zinc-500">Defina a identidade principal do projeto.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
                             <Input
                                 label="Nome do Projeto"
                                 value={formData.name}
                                 onChange={v => handleChange("name", v)}
-                                placeholder="Ex: Cidade Alta RP"
+                                placeholder="Ex: Servidor Roleplay"
                                 required
+                                className="w-full"
                             />
-                            <div className="space-y-2">
+
+                            <div className="space-y-2 w-full">
                                 <label className="text-sm font-medium text-zinc-400">Slug / Subdomínio</label>
-                                <div className="flex">
+                                <div className="flex group w-full">
                                     <input
                                         type="text"
                                         value={formData.slug}
                                         onChange={e => handleChange("slug", e.target.value)}
-                                        className="flex-1 bg-zinc-950/50 border border-white/10 rounded-l-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-violet-600/50"
-                                        placeholder="cidadealta"
+                                        className="flex-1 bg-zinc-900 border border-zinc-800 border-r-0 rounded-l-lg px-4 py-2.5 text-white placeholder-zinc-600 focus:outline-none focus:bg-zinc-800 transition-colors min-w-0"
+                                        placeholder="meu-projeto"
                                         pattern="[a-z0-9-]+"
                                     />
-                                    <span className="bg-white/5 border border-white/10 border-l-0 rounded-r-xl px-4 flex items-center text-sm text-zinc-500 font-mono">
+                                    <span className="bg-zinc-900 border border-zinc-800 border-l-0 rounded-r-lg px-4 flex items-center text-sm text-zinc-500 border-l border-white/5 shrink-0">
                                         .suaplataforma.com
                                     </span>
                                 </div>
                             </div>
+
                             <Input
-                                label="Domínio Personalizado (Opcional)"
+                                label="Domínio Personalizado"
                                 value={formData.customDomain || ""}
                                 onChange={v => handleChange("customDomain", v)}
-                                placeholder="dashboard.cidadealta.com.br"
-                                className="md:col-span-2"
+                                placeholder="painel.seuservidor.com"
+                                className="w-full"
+                                optional
                             />
                         </div>
-                    </Section>
+                    </div>
 
                     {/* Discord Integration */}
-                    <Section title="Integração Discord" icon={<Disc className='w-4 h-4 text-indigo-400' />}>
-                        <div className="space-y-6">
-                            <div className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl text-sm text-indigo-200/80">
-                                O cliente deve criar uma aplicação no Discord Developer Portal e convidar o bot para o servidor.
+                    <div className="glass-card rounded-xl p-8 space-y-8">
+                        <div className="flex items-center gap-3 pb-6 border-b border-white/5">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                <Disc className="w-5 h-5 text-indigo-400" />
                             </div>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <Input label="Guild ID (Servidor)" value={formData.discordGuildId} onChange={v => handleChange("discordGuildId", v)} required mono />
-                                <Input label="Role Admin ID" value={formData.discordRoleAdmin} onChange={v => handleChange("discordRoleAdmin", v)} required mono />
-                                <Input label="Client ID (App)" value={formData.discordClientId} onChange={v => handleChange("discordClientId", v)} required mono />
-                                <Input label="Client Secret" value={formData.discordClientSecret} onChange={v => handleChange("discordClientSecret", v)} required type="password" mono />
-                            </div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mt-2">Cargos Adicionais</h4>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <Input label="Role Avaliador (Opcional)" value={formData.discordRoleEvaluator || ""} onChange={v => handleChange("discordRoleEvaluator", v)} mono />
-                                <Input label="Role Player (Opcional)" value={formData.discordRolePlayer || ""} onChange={v => handleChange("discordRolePlayer", v)} mono />
+                            <div>
+                                <h3 className="text-lg font-semibold text-white">Integração Discord</h3>
+                                <p className="text-sm text-zinc-500">Conecte o bot e configure os cargos de acesso.</p>
                             </div>
                         </div>
-                    </Section>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-lg flex gap-3 text-sm text-indigo-200">
+                                <Info className="w-5 h-5 text-indigo-400 shrink-0" />
+                                <p>O cliente deve criar uma aplicação no Discord Developer Portal e convidar o bot para o servidor antes de configurar.</p>
+                            </div>
+
+                            <Input label="Guild ID (Servidor)" value={formData.discordGuildId} onChange={v => handleChange("discordGuildId", v)} required mono />
+                            <Input label="Role Admin ID" value={formData.discordRoleAdmin} onChange={v => handleChange("discordRoleAdmin", v)} required mono />
+
+                            <Input label="Client ID (App)" value={formData.discordClientId} onChange={v => handleChange("discordClientId", v)} required mono />
+                            <Input label="Client Secret" value={formData.discordClientSecret} onChange={v => handleChange("discordClientSecret", v)} required type="password" mono />
+                        </div>
+
+                        <div className="border-t border-white/5 pt-6">
+                            <h4 className="text-sm font-medium text-white mb-4">Cargos Adicionais</h4>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <Input label="Role Avaliador" value={formData.discordRoleEvaluator || ""} onChange={v => handleChange("discordRoleEvaluator", v)} mono optional />
+                                <Input label="Role Player" value={formData.discordRolePlayer || ""} onChange={v => handleChange("discordRolePlayer", v)} mono optional />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right Column (Settings & Branding) */}
-                <div className="space-y-8">
+                {/* Right Column (Side Settings) */}
+                <div className="lg:col-span-4 space-y-8">
 
-                    {/* Features Flags */}
-                    <Section title="Módulos (Features)" icon={<Shield className='w-4 h-4 text-emerald-400' />}>
-                        <div className="space-y-4">
+                    {/* Status Card */}
+                    <div className="glass-card rounded-xl p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-white">Status do Painel</h3>
+                            <div className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`} />
+                        </div>
+                        <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
+                            Desativar o painel impede imediatamente o acesso de todos os usuários deste cliente.
+                        </p>
+
+                        <label className="flex items-center justify-between p-4 rounded-lg bg-zinc-900 border border-zinc-800 cursor-pointer group hover:border-zinc-700 transition-colors">
+                            <span className="text-sm font-medium text-zinc-300 group-hover:text-white">Ativar Acesso</span>
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isActive}
+                                    onChange={e => handleChange("isActive", e.target.checked)}
+                                    className="sr-only"
+                                />
+                                <div className={`w-11 h-6 rounded-full transition-colors ${formData.isActive ? 'bg-emerald-600' : 'bg-zinc-700'}`}>
+                                    <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.isActive ? 'translate-x-5' : ''}`} />
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {/* Features */}
+                    <div className="glass-card rounded-xl p-6">
+                        <div className="flex items-center gap-2 mb-6">
+                            <Shield className="w-5 h-5 text-emerald-400" />
+                            <h3 className="font-semibold text-white">Módulos Ativos</h3>
+                        </div>
+                        <div className="space-y-3">
                             <FeatureToggle
-                                label="Sistema de Punições"
-                                description="Banimentos, advertências e whitelist."
+                                label="Punições"
                                 active={formData.features.punishments}
                                 onToggle={() => handleFeatureToggle("punishments")}
                             />
                             <FeatureToggle
-                                label="Allowlist / Arquivo"
-                                description="Histórico de aprovações e reprovações."
+                                label="Allowlist"
                                 active={formData.features.archive}
                                 onToggle={() => handleFeatureToggle("archive")}
                             />
                             <FeatureToggle
-                                label="Notificações Discord"
-                                description="Webhooks de logs para canais."
+                                label="Notificações"
                                 active={formData.features.discordNotify}
                                 onToggle={() => handleFeatureToggle("discordNotify")}
                             />
                         </div>
-                    </Section>
+                    </div>
 
                     {/* Branding */}
-                    <Section title="Branding e Estilo" icon={<Palette className='w-4 h-4 text-pink-400' />}>
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-sm font-medium text-zinc-400 mb-2 block">Cores do Tema</label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <ColorPicker label="Primária" value={formData.primaryColor} onChange={v => handleChange("primaryColor", v)} />
-                                    <ColorPicker label="Secundária" value={formData.secondaryColor} onChange={v => handleChange("secondaryColor", v)} />
-                                </div>
-                            </div>
-                            <Input label="URL do Logo" value={formData.logo || ""} onChange={v => handleChange("logo", v)} placeholder="https://..." />
-                            <Input label="URL do Favicon" value={formData.favicon || ""} onChange={v => handleChange("favicon", v)} placeholder="https://..." />
+                    <div className="glass-card rounded-xl p-6 space-y-6">
+                        <div className="flex items-center gap-2 border-b border-white/5 pb-4">
+                            <Palette className="w-5 h-5 text-pink-400" />
+                            <h3 className="font-semibold text-white">Identidade Visual</h3>
                         </div>
-                    </Section>
 
-                    {/* Status */}
-                    <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
-                        <label className="flex items-center justify-between cursor-pointer group">
-                            <div>
-                                <span className="block font-medium text-white group-hover:text-violet-400 transition-colors">Status do Painel</span>
-                                <span className="text-xs text-zinc-500">Desativar impede acesso total ao painel.</span>
+                        <div>
+                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3 block">Paleta de Cores</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <ColorPicker label="Primária" value={formData.primaryColor} onChange={v => handleChange("primaryColor", v)} />
+                                <ColorPicker label="Secundária" value={formData.secondaryColor} onChange={v => handleChange("secondaryColor", v)} />
                             </div>
-                            <div
-                                onClick={() => handleChange("isActive", !formData.isActive)}
-                                className={`w-12 h-6 rounded-full relative transition-colors ${formData.isActive ? "bg-emerald-500" : "bg-zinc-700"}`}
-                            >
-                                <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${formData.isActive ? "translate-x-6" : ""}`} />
-                            </div>
-                        </label>
+                        </div>
+
+                        <div className="space-y-4 pt-2">
+                            <Input label="URL do Logo" value={formData.logo || ""} onChange={v => handleChange("logo", v)} placeholder="https://..." optional />
+                            <Input label="URL do Favicon" value={formData.favicon || ""} onChange={v => handleChange("favicon", v)} placeholder="https://..." optional />
+                        </div>
                     </div>
 
                 </div>
@@ -265,31 +316,22 @@ export function TenantForm({ initialData, isEditing = false }: TenantFormProps) 
 
 // --- Subcomponents ---
 
-function Section({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) {
-    return (
-        <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
-                {icon}
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{title}</h3>
-            </div>
-            {children}
-        </div>
-    );
-}
-
-function Input({ label, value, onChange, placeholder, type = "text", required, mono, className }: any) {
+function Input({ label, value, onChange, placeholder, type = "text", required, mono, className, optional }: any) {
     return (
         <div className={`space-y-2 ${className}`}>
-            <label className="text-sm font-medium text-zinc-400">
-                {label} {required && <span className="text-red-400">*</span>}
-            </label>
+            <div className="flex justify-between">
+                <label className="text-sm font-medium text-zinc-300">
+                    {label} {required && <span className="text-violet-400">*</span>}
+                </label>
+                {optional && <span className="text-[10px] uppercase text-zinc-600 font-bold tracking-wider">Opcional</span>}
+            </div>
             <input
                 type={type}
                 value={value}
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder}
                 required={required}
-                className={`w-full bg-zinc-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-zinc-700 focus:outline-none focus:ring-2 focus:ring-violet-600/50 transition-all ${mono ? 'font-mono text-sm' : ''}`}
+                className={`w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50 transition-all ${mono ? 'font-mono text-sm tracking-tight' : ''}`}
             />
         </div>
     );
@@ -297,39 +339,35 @@ function Input({ label, value, onChange, placeholder, type = "text", required, m
 
 function ColorPicker({ label, value, onChange }: any) {
     return (
-        <div className="space-y-2">
-            <span className="text-xs text-zinc-500">{label}</span>
-            <div className="flex gap-2">
-                <input
-                    type="color"
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    className="h-10 w-12 rounded bg-transparent cursor-pointer"
-                />
-                <input
-                    type="text"
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    className="flex-1 min-w-0 bg-zinc-950/50 border border-white/10 rounded-lg px-2 text-xs font-mono text-white uppercase"
-                />
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 flex items-center gap-3 hover:border-zinc-700 transition-colors">
+            <input
+                type="color"
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                className="h-8 w-8 rounded bg-transparent cursor-pointer border-none p-0"
+            />
+            <div className="flex flex-col">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold">{label}</span>
+                <span className="text-xs font-mono text-zinc-300">{value}</span>
             </div>
         </div>
     );
 }
 
-function FeatureToggle({ label, description, active, onToggle }: any) {
+function FeatureToggle({ label, active, onToggle }: any) {
     return (
         <div
             onClick={onToggle}
-            className={`flex items-start justify-between p-3 rounded-xl border border-transparent cursor-pointer transition-all ${active ? "bg-violet-500/10 border-violet-500/20" : "hover:bg-white/5"}`}
+            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${active ? "bg-violet-500/5 border-violet-500/20" : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/5"}`}
         >
-            <div>
-                <span className={`block text-sm font-medium ${active ? "text-violet-200" : "text-zinc-300"}`}>{label}</span>
-                <span className="text-xs text-zinc-500">{description}</span>
-            </div>
-            <div className={`w-10 h-5 mt-1 rounded-full relative transition-colors ${active ? "bg-violet-500" : "bg-zinc-700"}`}>
-                <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${active ? "translate-x-5" : ""}`} />
-            </div>
+            <span className={`text-sm font-medium ${active ? "text-violet-200" : "text-zinc-400"}`}>{label}</span>
+            {active ? (
+                <div className="w-5 h-5 rounded-full bg-violet-500 flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                </div>
+            ) : (
+                <div className="w-5 h-5 rounded-full border-2 border-zinc-700" />
+            )}
         </div>
     );
 }

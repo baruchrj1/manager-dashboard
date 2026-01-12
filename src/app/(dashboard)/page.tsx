@@ -1,6 +1,6 @@
 
 import { prisma } from "@/lib/prisma";
-import { Users, FileText, Activity, Server, Plus, Settings, List, ExternalLink } from "lucide-react";
+import { Users, Activity, Server, Plus, ArrowUpRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -19,156 +19,106 @@ async function getStats() {
 export default async function SuperAdminDashboard() {
     const stats = await getStats();
     const session = await getServerSession(authOptions);
-    const userFirstname = session?.user?.name?.split(' ')[0] || 'Admin';
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-10 animate-in fade-in duration-700">
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex items-end justify-between border-b border-white/5 pb-8">
                 <div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight font-display mb-2">
-                        Olá, <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">{userFirstname}</span>
+                    <h2 className="text-zinc-400 font-medium mb-1 text-sm uppercase tracking-wider">Bem-vindo de volta</h2>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">
+                        Painel de Controle
                     </h1>
-                    <p className="text-zinc-400 text-lg">
-                        Visão geral do ecossistema <span className="text-white font-medium">GTARP SaaS</span>.
-                    </p>
                 </div>
                 <div className="flex gap-3">
-                    <div className="px-4 py-2 rounded-lg bg-zinc-900/50 border border-white/5 backdrop-blur-md text-zinc-400 text-sm font-mono self-start md:self-auto">
-                        v3.0.0-saas
-                    </div>
+                    <Link
+                        href="/tenants/new"
+                        className="h-10 px-6 bg-white hover:bg-zinc-200 text-black text-sm font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-white/5"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Novo Cliente
+                    </Link>
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatsCard
-                    label="Total de Painéis"
-                    value={stats.tenantCount}
-                    icon={<Server className="w-5 h-5 text-violet-400" />}
-                    trend="+12% este mês"
-                    color="violet"
-                />
-                <StatsCard
-                    label="Painéis Ativos"
+            {/* KPI Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <KpiCard
+                    label="Instâncias Ativas"
                     value={stats.activeCount}
-                    icon={<Activity className="w-5 h-5 text-emerald-400" />}
-                    trend="100% uptime"
-                    color="emerald"
+                    total={stats.tenantCount}
+                    icon={<Server className="w-5 h-5 text-emerald-400" />}
+                    trend="+2 nesta semana"
                 />
-                <StatsCard
+                <KpiCard
                     label="Usuários Totais"
                     value={stats.totalUsers}
-                    icon={<Users className="w-5 h-5 text-blue-400" />}
+                    icon={<Users className="w-5 h-5 text-violet-400" />}
                     trend="Global"
-                    color="blue"
                 />
-                <StatsCard
-                    label="Total de Reports"
+                <KpiCard
+                    label="Reports Pendentes"
                     value={stats.totalReports}
-                    icon={<FileText className="w-5 h-5 text-orange-400" />}
-                    trend="Global"
-                    color="orange"
+                    icon={<Activity className="w-5 h-5 text-orange-400" />}
+                    trend="Requer atenção"
+                />
+                <KpiCard
+                    label="Status do Sistema"
+                    value="100%"
+                    icon={<ShieldCheck className="w-5 h-5 text-blue-400" />}
+                    trend="Operando normalmente"
                 />
             </div>
 
-            {/* Quick Actions */}
-            <div>
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 font-display uppercase tracking-wide">
-                    <div className="w-1 h-6 bg-violet-600 rounded-full"></div>
-                    Ações Rápidas
-                </h2>
+            {/* Recent Activity / Quick Access */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <ActionCard
-                        href="/tenants/new"
-                        icon={<Plus className="w-6 h-6 text-white" />}
-                        title="Novo Painel"
-                        description="Criar e configurar um novo tenant para uma cidade."
-                        gradient="from-violet-600 to-indigo-600"
-                    />
-                    <ActionCard
-                        href="/tenants"
-                        icon={<List className="w-6 h-6 text-indigo-200" />}
-                        title="Gerenciar Painéis"
-                        description="Visualizar, editar e auditar tenants existentes."
-                        gradient="from-zinc-800 to-zinc-900 border-zinc-700"
-                        isSecondary
-                    />
-                    <ActionCard
-                        href="/settings"
-                        icon={<Settings className="w-6 h-6 text-zinc-300" />}
-                        title="Configurações Globais"
-                        description="Ajustes de sistema e variáveis de ambiente."
-                        gradient="from-zinc-800 to-zinc-900 border-zinc-700"
-                        isSecondary
-                    />
+                {/* Section 1 */}
+                <div className="glass-card rounded-xl p-6 h-64 flex flex-col justify-center items-center text-center border border-white/5 bg-zinc-900/40">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800/50 flex items-center justify-center mb-4 text-zinc-500">
+                        <Users className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Gerenciar Clientes</h3>
+                    <p className="text-zinc-500 text-sm max-w-xs mb-6">Acesse a lista completa de tenants para auditoria e configurações avançadas.</p>
+                    <Link href="/tenants" className="text-sm font-medium text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors">
+                        Ver Lista <ArrowUpRight className="w-4 h-4" />
+                    </Link>
                 </div>
-            </div>
 
+                {/* Section 2 */}
+                <div className="glass-card rounded-xl p-6 h-64 flex flex-col justify-center items-center text-center border border-white/5 bg-zinc-900/40">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800/50 flex items-center justify-center mb-4 text-zinc-500">
+                        <Activity className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">Métricas de Uso</h3>
+                    <p className="text-zinc-500 text-sm max-w-xs mb-6">Analise o desempenho e volume de dados das instâncias conectadas.</p>
+                    <button className="text-sm font-medium text-zinc-600 cursor-not-allowed flex items-center gap-1">
+                        Em Breve
+                    </button>
+                </div>
+
+            </div>
         </div>
     );
 }
 
-// Components
-function StatsCard({ label, value, icon, trend, color }: any) {
-    const gradients: any = {
-        violet: "from-violet-500/20 to-transparent border-violet-500/20",
-        emerald: "from-emerald-500/20 to-transparent border-emerald-500/20",
-        blue: "from-blue-500/20 to-transparent border-blue-500/20",
-        orange: "from-orange-500/20 to-transparent border-orange-500/20",
-    };
-
+function KpiCard({ label, value, total, icon, trend }: any) {
     return (
-        <div className={`relative overflow-hidden rounded-2xl border bg-zinc-900/40 backdrop-blur-sm p-6 transition-all hover:-translate-y-1 hover:shadow-lg group ${gradients[color]}`}>
-            <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity scale-150`}>
-                {icon}
-            </div>
-
-            <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className={`p-2.5 rounded-xl bg-zinc-900/80 border border-white/5 shadow-inner`}>
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-6 hover:border-white/10 transition-colors group">
+            <div className="flex items-center justify-between mb-4">
+                <div className="p-2 rounded-lg bg-white/5 border border-white/5 group-hover:scale-110 transition-transform duration-300">
                     {icon}
                 </div>
+                {total && <span className="text-xs font-medium text-zinc-500 bg-zinc-900 px-2 py-1 rounded-full border border-zinc-800">{total} Total</span>}
             </div>
-
-            <div className="relative z-10">
-                <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
-                <h3 className="text-3xl font-bold text-white font-display tracking-tight">{value}</h3>
-
-                <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/5">
-                        {trend}
-                    </span>
+            <div>
+                <h3 className="text-3xl font-bold text-white tracking-tight mb-1">{value}</h3>
+                <div className="flex items-center justify-between">
+                    <p className="text-sm text-zinc-500 font-medium">{label}</p>
+                    <span className="text-[10px] text-zinc-600 font-medium uppercase tracking-wide">{trend}</span>
                 </div>
             </div>
         </div>
-    )
-}
-
-function ActionCard({ href, icon, title, description, gradient, isSecondary }: any) {
-    return (
-        <Link
-            href={href}
-            className={`group relative overflow-hidden rounded-2xl border p-1 transition-all hover:scale-[1.02] hover:shadow-xl ${isSecondary ? 'border-zinc-800 bg-zinc-900/50' : 'border-transparent bg-transparent'}`}
-        >
-            {!isSecondary && (
-                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-100`}></div>
-            )}
-
-            <div className={`relative h-full rounded-xl p-6 flex flex-col justify-between ${isSecondary ? 'bg-transparent' : 'bg-zinc-950/90'}`}>
-                <div>
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${isSecondary ? 'bg-zinc-800 text-white' : 'bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-900/20'}`}>
-                        {icon}
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-                    <p className="text-zinc-400 text-sm leading-relaxed">{description}</p>
-                </div>
-
-                <div className="mt-6 flex items-center text-xs font-bold uppercase tracking-wider text-zinc-500 group-hover:text-white transition-colors">
-                    Acessar <ExternalLink className="w-3 h-3 ml-2" />
-                </div>
-            </div>
-        </Link>
     )
 }

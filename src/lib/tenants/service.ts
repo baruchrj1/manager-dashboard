@@ -1,14 +1,12 @@
-
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-
-// --- Types ---
-
-export type TenantFeatures = {
-    archive: boolean;
-    punishments: boolean;
-    discordNotify: boolean;
-};
+import {
+    createTenantSchema,
+    updateTenantSchema,
+    type CreateTenantInput,
+    type UpdateTenantInput,
+    type TenantFeatures
+} from "./schema";
 
 export type Tenant = {
     id: string;
@@ -40,45 +38,6 @@ export type Tenant = {
     };
 };
 
-export const createTenantSchema = z.object({
-    name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-    slug: z.string().min(2).max(50).regex(/^[a-z0-9-]+$/, "Slug inválido"),
-    discordGuildId: z.string().min(17, "Guild ID inválido"),
-    discordClientId: z.string().min(17, "Client ID inválido"),
-    discordClientSecret: z.string().min(10, "Client Secret inválido"),
-    discordRoleAdmin: z.string().min(17, "Role Admin ID inválido"),
-    discordRoleEvaluator: z.string().optional(),
-    discordRolePlayer: z.string().optional(),
-    primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-    secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-});
-
-export const updateTenantSchema = z.object({
-    name: z.string().min(2).optional(),
-    slug: z.string().min(2).regex(/^[a-z0-9-]+$/).optional(),
-    customDomain: z.string().optional().nullable(),
-    logo: z.string().url("URL do Logo inválida").optional().nullable(),
-    favicon: z.string().url("URL do Favicon inválida").optional().nullable(),
-    primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-    secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-    customCss: z.string().optional().nullable(),
-    discordGuildId: z.string().min(17).optional(),
-    discordClientId: z.string().min(17).optional(),
-    discordClientSecret: z.string().min(10).optional(),
-    discordRoleAdmin: z.string().min(17).optional(),
-    discordRoleEvaluator: z.string().optional().nullable(),
-    discordRolePlayer: z.string().optional().nullable(),
-    features: z.object({
-        archive: z.boolean(),
-        punishments: z.boolean(),
-        discordNotify: z.boolean(),
-    }).optional(),
-    isActive: z.boolean().optional(),
-});
-
-export type CreateTenantInput = z.infer<typeof createTenantSchema>;
-export type UpdateTenantInput = z.infer<typeof updateTenantSchema>;
-
 
 // --- Helpers ---
 
@@ -101,7 +60,7 @@ function parseFeatures(featuresJson: string): TenantFeatures {
 // --- Service ---
 
 export const TenantService = {
-    
+
     async listTenants(): Promise<Tenant[]> {
         const tenants = await prisma.tenant.findMany({
             orderBy: { createdAt: "desc" },
@@ -139,7 +98,7 @@ export const TenantService = {
         const existing = await prisma.tenant.findUnique({
             where: { slug: data.slug },
         });
-        
+
         if (existing) {
             throw new Error("Slug já está em uso");
         }
@@ -181,7 +140,7 @@ export const TenantService = {
 
         // Prepare update data
         const updateData: any = { ...data };
-        
+
         // Handle features JSON serialization
         if (data.features) {
             updateData.features = JSON.stringify(data.features);

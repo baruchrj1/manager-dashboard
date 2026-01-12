@@ -1,129 +1,137 @@
 
 import Link from "next/link";
-import { Plus, Search, ExternalLink, Settings, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Settings, ArrowUpRight, CheckCircle2, AlertCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
-// Server Component
 export default async function TenantsPage() {
     const tenants = await prisma.tenant.findMany({
         orderBy: { createdAt: "desc" },
-        include: {
-            _count: { select: { users: true } }
-        }
     });
 
     return (
         <div className="space-y-8">
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white font-display">Clientes SaaS</h1>
-                    <p className="text-zinc-400 mt-1">Gerencie os painéis ativos e suas configurações.</p>
+                    <h1 className="text-2xl font-black text-white uppercase tracking-tight font-display">
+                        Clientes SaaS
+                    </h1>
+                    <p className="text-zinc-500 text-xs mt-1 font-medium">
+                        Gerencie o acesso e configurações das instâncias.
+                    </p>
                 </div>
-                <Link
-                    href="/tenants/new"
-                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors shadow-lg shadow-violet-900/20 font-medium"
-                >
-                    <Plus className="w-5 h-5" />
-                    Novo Painel
-                </Link>
+
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+                        <input
+                            className="bg-zinc-900 border border-zinc-800 rounded h-9 pl-9 pr-4 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-700 w-64 uppercase tracking-wide"
+                            placeholder="FILTRAR..."
+                        />
+                    </div>
+                    <Link
+                        href="/tenants/new"
+                        className="h-9 px-4 bg-white hover:bg-zinc-200 text-black text-xs font-black uppercase tracking-wider rounded flex items-center gap-2 transition-colors"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                        Novo
+                    </Link>
+                </div>
             </div>
 
-            {/* List */}
-            <div className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <table className="w-full">
+            {/* Table */}
+            <div className="border border-zinc-800 rounded bg-[#0A0A0A] overflow-hidden">
+                <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="border-b border-white/5 bg-white/[0.02]">
-                            <th className="text-left px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Cliente</th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">URL / Domínio</th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Status</th>
-                            <th className="text-right px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">Ações</th>
+                        <tr className="border-b border-zinc-800 bg-zinc-900/30">
+                            <th className="py-3 px-6 text-[10px] font-bold text-zinc-500 uppercase tracking-widest w-24">ID</th>
+                            <th className="py-3 px-6 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Organização</th>
+                            <th className="py-3 px-6 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Acesso</th>
+                            <th className="py-3 px-6 text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">Estado</th>
+                            <th className="py-3 px-6 text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-right">Opções</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {tenants.map((tenant) => (
-                            <tr key={tenant.id} className="hover:bg-white/[0.02] transition-colors group">
-                                <td className="px-6 py-4">
+                    <tbody className="divide-y divide-zinc-800/50">
+                        {tenants.map((tenant, idx) => (
+                            <tr key={tenant.id} className="group hover:bg-white/[0.02] transition-colors">
+                                {/* ID */}
+                                <td className="py-4 px-6 align-middle">
+                                    <span className="font-mono text-xs text-zinc-500 group-hover:text-zinc-300">
+                                        {(idx + 1).toString().padStart(2, '0')}
+                                    </span>
+                                </td>
+
+                                {/* ORG */}
+                                <td className="py-4 px-6 align-middle">
                                     <div className="flex items-center gap-4">
-                                        <div
-                                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-inner"
-                                            style={{ backgroundColor: tenant.primaryColor }}
-                                        >
+                                        <div className="w-9 h-9 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center relative overflow-hidden">
                                             {tenant.logo ?
-                                                <img src={tenant.logo} className="w-full h-full object-cover rounded-lg" />
-                                                : tenant.name.charAt(0)
+                                                <img src={tenant.logo} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                : <span className="text-zinc-600 font-bold text-xs">{tenant.name[0]}</span>
                                             }
                                         </div>
                                         <div>
-                                            <p className="font-medium text-white">{tenant.name}</p>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono">
-                                                    ID: {tenant.discordGuildId.slice(0, 4)}...
-                                                </span>
-                                            </div>
+                                            <div className="font-bold text-white text-sm uppercase tracking-tight">{tenant.name}</div>
+                                            <div className="text-[10px] text-zinc-600 font-mono mt-0.5">GID: {tenant.discordGuildId.slice(0, 4)}...</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
+
+                                {/* ACCESS */}
+                                <td className="py-4 px-6 align-middle">
                                     <div className="flex flex-col">
-                                        <span className="text-sm text-zinc-300">{tenant.subdomain}.suaplataforma.com</span>
-                                        {tenant.customDomain && (
-                                            <span className="text-xs text-emerald-400 flex items-center gap-1">
-                                                <GlobeIcon className="w-3 h-3" /> {tenant.customDomain}
-                                            </span>
-                                        )}
+                                        <span className="text-xs text-zinc-300 font-mono">{tenant.subdomain}</span>
+                                        <span className="text-[10px] text-zinc-600 uppercase tracking-wide">.suaplataforma.com</span>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
+
+                                {/* STATUS */}
+                                <td className="py-4 px-6 align-middle text-center">
                                     {tenant.isActive ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                            Ativo
-                                        </span>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/30 border border-emerald-900/50">
+                                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Ativo</span>
+                                        </div>
                                     ) : (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
-                                            Inativo
-                                        </span>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-950/30 border border-red-900/50">
+                                            <AlertCircle className="w-3 h-3 text-red-500" />
+                                            <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Inativo</span>
+                                        </div>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+
+                                {/* OPTIONS */}
+                                <td className="py-4 px-6 align-middle text-right">
+                                    <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                                         <Link
                                             href={`/tenants/${tenant.id}`}
-                                            className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                            title="Configurar"
+                                            className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+                                            title="Configurações"
                                         >
                                             <Settings className="w-4 h-4" />
                                         </Link>
                                         <a
                                             href={`https://${tenant.subdomain}.suaplataforma.com`}
                                             target="_blank"
-                                            className="p-2 text-zinc-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-colors"
+                                            className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                                             title="Acessar Painel"
                                         >
-                                            <ExternalLink className="w-4 h-4" />
+                                            <ArrowUpRight className="w-4 h-4" />
                                         </a>
                                     </div>
                                 </td>
                             </tr>
                         ))}
-                        {tenants.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className="px-6 py-12 text-center text-zinc-500">
-                                    Nenhum painel criado ainda.
-                                </td>
-                            </tr>
-                        )}
                     </tbody>
                 </table>
+
+                {tenants.length === 0 && (
+                    <div className="py-20 text-center border-t border-zinc-900">
+                        <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">Nenhum cliente encontrado</p>
+                    </div>
+                )}
             </div>
         </div>
     );
-}
-
-function GlobeIcon({ className }: { className?: string }) {
-    return (
-        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-    )
 }
