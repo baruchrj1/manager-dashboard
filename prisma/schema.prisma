@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
+  directUrl = env("POSTGRES_URL")
+}
+
+// ============================================
+// MULTI-TENANT SYSTEM
+// ============================================
+
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String   // "Cidade Alta RP"
+  slug        String   @unique // "cidadealta"
+
+  // Dominios
+  subdomain   String   @unique // cidadealta.suaplataforma.com
+  customDomain String? @unique // dashboard.cidadealta.com.br
+
+  // Branding
+  logo           String?  // URL do logo
+  favicon        String?  // URL do favicon
+  primaryColor   String   @default("#6366f1")
+  secondaryColor String   @default("#4f46e5")
+  customCss      String?  // CSS adicional
+
+  // Features habilitadas (JSON)
+  features    String   @default("{\"archive\":true,\"punishments\":true,\"discordNotify\":true}")
+
+  // Discord OAuth (cada cliente tem seu proprio app)
+  discordGuildId      String
+  discordClientId     String
+  discordClientSecret String
+  discordBotToken     String?
+  discordWebhookUrl   String?
+  discordAdminChannel String?
+  discordRoleAdmin    String
+  discordRoleEvaluator String?
+  discordRolePlayer   String?
+
+  // Status
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacoes
+  users             User[]
+  reports           Report[]
+  organizations     Organization[]
+  punishments       Punishment[]
+  reportReasons     ReportReason[]
+  punishmentDurations PunishmentDuration[]
+  archivePeriods    ArchivePeriod[]
+  systemSettings    SystemSetting[]
+  responseTemplates ResponseTemplate[]
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+// Super admins da plataforma (voce)
+model SuperAdmin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// TENANT DATA
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  discordId     String    // Discord ID
+  username      String
+  avatar        String?
+  isAdmin       Boolean   @default(false)
+  role          String    @default("PLAYER") // PLAYER, EVALUATOR, ADMIN
+  reportsMade   Report[]  @relation("Reporter")
+
+  // Relations for punishments
+  punishmentsReceived Punishment[] @relation("PunishmentReceiver")
+  punishmentsGiven    Punishment[] @relation("PunishmentGiver")
+
+  // Tenant
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now())
+
+  // Indexes for performance
+  @@unique([discordId, tenantId]) // Mesmo usuario Discord pode existir em tenants diferentes
+  @@index([tenantId])
+  @@index([role])
+  @@index([isAdmin])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Report {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Incident Details
+  accusedId   String    // ID of the player being reported
+  accusedName String?   // Name of the player being reported
+  accusedFamily String? // Organization/Family of the accused
+  reason      String
+  description String?
+  evidence    String    // URL to video/image
+
+  // Status
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED, INVESTIGATING
+  adminNotes  String?
+
+  // Relations
+  reporterId  String
+  reporter    User      @relation("Reporter", fields: [reporterId], references: [id])
+  handledBy   String?   // Admin ID who processed the report
+
+  // Relation to Punishment
+  punishment  Punishment?
+
+  // Tenant
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Indexes for performance
+  @@index([tenantId])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([accusedId])
+  @@index([reporterId])
+  @@index([handledBy])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  // Tenant
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([name, tenantId]) // Nome unico por tenant
+  @@index([tenantId])
+}
+
+
+model Punishment {
+  id        String    @id @default(cuid())
+  type      String    // WARNING, KICK, TEMP_BAN, PERM_BAN
+  reason    String
+  duration  Int?      // In hours, for TEMP_BAN
+  expiresAt DateTime?
+  isActive  Boolean   @default(true)
+  organization String? // Organization/Family of the punished player
+
+  userId    String
+  user      User      @relation("PunishmentReceiver", fields: [userId], references: [id])
+
+  adminId   String
+  admin     User      @relation("PunishmentGiver", fields: [adminId], references: [id])
+
+  reportId  Int?      @unique
+  report    Report?   @relation(fields: [reportId], references: [id])
+
+  // Tenant
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([adminId])
+  @@index([isActive])
+  @@index([organization])
+}
+
+model ReportReason {
+  id        String   @id @default(cuid())
+  value     String   // The internal value (e.g., "RDM")
+  label     String   // The display label (e.g., "RDM (Morte Aleatória)")
+  createdAt DateTime @default(now())
+
+  // Tenant
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([value, tenantId])
+  @@index([tenantId])
+}
+
+model PunishmentDuration {
+  id        String   @id @default(cuid())
+  value     String
+  label     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tenant
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([value, tenantId])
+  @@index([tenantId])
+}
+
+// ============================================
+// ADMIN TOOLS
+// ============================================
+
+model ResponseTemplate {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  category    String   // APPROVAL, REJECTION, INVESTIGATION, OTHER
+  
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([tenantId])
+  @@index([category])
+}
+
+// ============================================
+// ARCHIVE SYSTEM - Historical Data Storage
+// ============================================
+
+model ArchivePeriod {
+  id           String   @id @default(cuid())
+  name         String   // "Janeiro 2026", "Período 1 - 2026"
+  startDate    DateTime
+  endDate      DateTime
+
+  // Statistics snapshot
+  totalReports   Int @default(0)
+  approvedReports Int @default(0)
+  rejectedReports Int @default(0)
+  pendingReports  Int @default(0)
+  totalPunishments Int @default(0)
+
+  // Relations
+  archivedReports     ArchivedReport[]
+  archivedPunishments ArchivedPunishment[]
+
+  // Tenant
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model ArchivedReport {
+  id           String   @id @default(cuid())
+  originalId   Int      // Original report ID
+  
+  // Original report data
+  accusedId    String
+  accusedName  String?
+  accusedFamily String?
+  reason       String
+  description  String?
+  evidence     String
+  status       String
+  adminNotes   String?
+  reporterId   String
+  reporterName String?
+  handledBy    String?
+  handlerName  String?
+  originalCreatedAt DateTime
+  originalUpdatedAt DateTime
+  
+  // Archive relation
+  periodId     String
+  period       ArchivePeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([periodId])
+  @@index([accusedFamily])
+  @@index([status])
+}
+
+model ArchivedPunishment {
+  id           String   @id @default(cuid())
+  originalId   String   // Original punishment ID
+  
+  // Original punishment data
+  type         String
+  reason       String
+  duration     Int?
+  expiresAt    DateTime?
+  organization String?
+  userId       String
+  userName     String?
+  adminId      String
+  adminName    String?
+  originalCreatedAt DateTime
+  
+  // Archive relation
+  periodId     String
+  period       ArchivePeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  
+  @@index([periodId])
+  @@index([organization])
+  @@index([type])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  // Tenant
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([key, tenantId])
+  @@index([tenantId])
+}

@@ -1,26 +1,235 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f2f2f2;
+    --foreground: #18181b;
+
+    --card: #ffffff;
+    --card-foreground: #18181b;
+
+    --popover: #ffffff;
+    --popover-foreground: #18181b;
+
+    --primary: #8B5CF6;
+    --primary-foreground: #ffffff;
+
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: #8B5CF6;
+  }
+
+  .dark {
+    --background: #0D0D0D;
+    --foreground: #FAFAFA;
+
+    --card: #141414;
+    --card-foreground: #FAFAFA;
+
+    --popover: #141414;
+    --popover-foreground: #FAFAFA;
+
+    --primary: #8B5CF6;
+    --primary-foreground: #FFFFFF;
+
+    --secondary: #27272a;
+    --secondary-foreground: #FAFAFA;
+
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+
+    --accent: #27272a;
+    --accent-foreground: #FAFAFA;
+
+    --destructive: #7f1d1d;
+    --destructive-foreground: #FAFAFA;
+
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #8B5CF6;
   }
 }
 
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* Note: Primary is also managed by ThemeContext via --color-primary directly */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-display: var(--font-bank-gothic), sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+
+  /* Custom GTA Colors (Hype Reports Theme) - Keeping these static or custom */
+  --color-gta-green-400: #A78BFA;
+  --color-gta-green-500: #8B5CF6;
+  --color-gta-green-600: #7C3AED;
+  --color-gta-green-900: #2E1065;
+
+  --color-gta-black: #0D0D0D;
+  --color-gta-gray-700: #2D2D2D;
+  --color-gta-gray-800: #1F1F1F;
+  --color-gta-gray-900: #121212;
+  --color-gta-red: #E02F2F;
+}
+
+/* Base Styles */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gta-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gta-gray-700);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Utility Classes */
+@utility gta-card {
+  @apply bg-card border border-border rounded-lg shadow-lg transition-all duration-300;
+}
+
+@utility gta-card-hover {
+  @apply gta-card hover:border-primary/30 hover:shadow-primary/5 hover:-translate-y-0.5;
+}
+
+@utility gta-input {
+  @apply flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200;
+}
+
+@utility gta-btn {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] h-10 px-4 py-2 uppercase tracking-wide;
+}
+
+@utility gta-btn-secondary {
+  @apply gta-btn bg-zinc-800 hover:bg-zinc-700 text-white;
+}
+
+@utility gta-btn-ghost {
+  @apply gta-btn bg-transparent hover:bg-white/5 text-white;
+}
+
+@utility gta-btn-danger {
+  @apply gta-btn bg-red-600 hover:bg-red-700;
+}
+
+/* Animations */
+@layer utilities {
+  .scanline::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(to bottom,
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.1;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-in {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+  }
+
+  .fade-in-0 {
+    animation-name: fadeIn;
+  }
+
+  .slide-in-from-bottom-4 {
+    --tw-translate-y: 1rem;
+    animation-name: slideInFromBottom;
+  }
+
+  @keyframes slideInFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(var(--tw-translate-y, 1rem));
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .table-row-hover {
+    @apply transition-colors duration-150;
+  }
+
+  .table-row-hover:hover {
+    @apply bg-white/[0.02];
+  }
 }
