@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { Shield, Users, LayoutDashboard, Settings, LogOut, Hexagon } from "lucide-react";
+import { Activity, Shield, Users, LayoutDashboard, Settings, LogOut, Hexagon } from "lucide-react";
 
 export default async function DashboardLayout({
     children,
@@ -46,6 +46,7 @@ export default async function DashboardLayout({
                     <div className="px-4 mb-2 mt-8">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-600">Sistema</span>
                     </div>
+                    <NavLink href="/audit" icon={<Activity className="w-4 h-4" />} label="Auditoria" />
                     <NavLink href="/settings" icon={<Settings className="w-4 h-4" />} label="Configurações" />
                 </nav>
 
